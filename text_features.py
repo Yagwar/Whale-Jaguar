@@ -1,3 +1,4 @@
+import csv
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
@@ -31,25 +32,35 @@ df_out=pd.SparseDataFrame(freq_filt,
                    columns=np.array(count_vect.get_feature_names())[indices[150:]],
                    index=list(blog_data.index))
 df_out.fillna(0,inplace=True)
+df_out=df_out.to_dense()
+df_out=df_out.apply(pd.to_numeric,downcast='unsigned')
+print("TF DataFrame complete")
 
-# print("exporting TF matrix")
+print("Exporting words")
+with open('frq_outh_complete_colnames.csv', 'w', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerows(list(df_out.columns))
+
+# auth info
+auths_ids=blog_data.id
+
+print("Grouping TF data by author")
+fr_auths=[list(df_out.loc[auths_ids==auth_id,].sum(axis=0)) for auth_id in list(set(auths_ids))]
+
+# freqs_auths=pd.DataFrame(fr_auths,
+#                          index=list(set(auths_ids)),
+#                          columns=df_out.columns)
+
+# freqs_auths=freqs_auths.apply(pd.to_numeric,downcast='unsigned')
+print("Exporting data")
 # try:
-#     df_out.to_csv("df_freq_out.csv")
+#     usr_txt_frq.to_csv("usr_txt_wrd_frqs.csv")
 # except Exception as e:
 #     print("type error: " + str(e))
 
-    
-print("Grouping TF data by author")
-try:
-    usr_txt_frq=df_out.groupby(blog_data["id"],sort=False).sum()
-except Exception as e:
-    print("type error: " + str(e))
+with open('frq_outh_complete_1.csv', 'w', newline='') as f:
+    writer = csv.writer(f)
+    writer.writerows(fr_auths)
 
-print("Exporting data")
-try:
-    usr_txt_frq.to_csv("usr_txt_wrd_frqs.csv")
-except Exception as e:
-    print("type error: " + str(e))
-
-    
 print("Process Finished")
+# exit()
